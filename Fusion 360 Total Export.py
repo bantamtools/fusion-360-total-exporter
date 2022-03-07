@@ -11,7 +11,11 @@ import time
 import os
 import re
 
-
+export_step = True
+export_stl = False
+export_iges = False
+max_output_path_length = 230
+ignore_already_exported_files = True
 
 class TotalExport(object):
   def __init__(self, app):
@@ -201,11 +205,24 @@ class TotalExport(object):
     design = component.parentDesign
     
     output_path = os.path.join(component_base_path, self._name(component.name))
+    if max_output_path_length > 0 and len(output_path) > max_output_path_length:
+      self.log.info("Path is too long. Skip \"{}\"".format(output_path))
+      return
+    
     self.log.info("Writing component \"{}\" to \"{}\"".format(component.name, output_path))
 
-    self._write_step(output_path, component)
-    self._write_stl(output_path, component)
-    self._write_iges(output_path, component)
+
+
+    try:
+      if export_step:
+        self._write_step(output_path, component)
+      if export_stl:
+        self._write_stl(output_path, component)
+      if export_iges:
+        self._write_iges(output_path, component)
+    except Exception as ex:
+      self.num_issues += 1
+      self.log.exception("Failed " + output_path, exc_info=ex)
 
     sketches = component.sketches
     for sketch_index in range(sketches.count):
