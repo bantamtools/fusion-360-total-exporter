@@ -41,8 +41,8 @@ class TotalExport(object):
     if output_path is None:
       return
 
-    file_handler = FileHandler(os.path.join(output_path, 'output.log'))
-    file_handler.setFormatter(Formatter('%(asctime)s - %(levelname)s - %(message)s'))
+    file_handler = FileHandler(os.path.join(output_path, 'output.log'), 'a', 'utf-8')
+    file_handler.setFormatter(Formatter(u'%(asctime)s - %(levelname)s - %(message)s'))
     self.log.addHandler(file_handler)
 
     self.log.info("Starting export!")
@@ -307,7 +307,7 @@ class TotalExport(object):
     return out_path
   
   def _name(self, name):
-    name = re.sub('[^a-zA-Z0-9 \n\.]', '', name).strip()
+    name = re.sub('[^a-zA-Z0-9а-яА-ЯЁё_ \n\.,-]', '_', name).strip()
 
     if name.endswith('.stp') or name.endswith('.stl') or name.endswith('.igs'):
       name = name[0: -4] + "_" + name[-3:]
