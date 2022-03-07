@@ -198,10 +198,10 @@ class TotalExport(object):
 
 
   def _write_component(self, component_base_path, component: adsk.fusion.Component):
-    self.log.info("Writing component \"{}\" to \"{}\"".format(component.name, component_base_path))
     design = component.parentDesign
     
     output_path = os.path.join(component_base_path, self._name(component.name))
+    self.log.info("Writing component \"{}\" to \"{}\"".format(component.name, output_path))
 
     self._write_step(output_path, component)
     self._write_stl(output_path, component)
