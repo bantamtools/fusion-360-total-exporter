@@ -138,17 +138,6 @@ class TotalExport(object):
 
     self.log.info("Exporting file \"{}\"".format(file.name))
 
-    try:
-      document = self.documents.open(file)
-
-      if document is None:
-        raise Exception("Documents.open returned None")
-
-      document.activate()
-    except BaseException as ex:
-      self.num_issues += 1
-      self.log.exception("Opening {} failed!".format(file.name), exc_info=ex)
-      return
 
     try:
       file_folder = file.parentFolder
@@ -174,13 +163,39 @@ class TotalExport(object):
         self.log.exception("Couldn't make root folder\"{}\"".format(file_folder_path))
         return
 
-      self.log.info("Writing to \"{}\"".format(file_folder_path))
+
+    except BaseException as ex:
+      self.num_issues += 1
+      self.log.exception("Failed while working on \"{}\"".format(file.name), exc_info=ex)
+      raise
+
+    file_export_path = os.path.join(file_folder_path, self._name(file.name)) + " v" + str(file.versionNumber)
+    file_export_path = file_export_path + ".f3d" #fix for names with dots. Fusion trying to interpretate symbols after last dot as extensoin
+
+
+    if max_output_path_length > 0 and len(file_export_path) > max_output_path_length:
+      self.log.info("Path is too long. Skip \"{}\"".format(file_export_path))
+      return
+
+    if ignore_already_exported_files and os.path.exists(file_export_path):
+      self.log.info("f3d file \"{}\" already exists".format(file_export_path))
+      return
+
+    try:
+      document = self.documents.open(file)
+
+      if document is None:
+        raise Exception("Documents.open returned None")
+
+      document.activate()
+
+      self.log.info("Writing to \"{}\" \"{}\"".format(file_folder_path, file_export_path))
 
       fusion_document: adsk.fusion.FusionDocument = adsk.fusion.FusionDocument.cast(document)
       design: adsk.fusion.Design = fusion_document.design
       export_manager: adsk.fusion.ExportManager = design.exportManager
 
-      file_export_path = os.path.join(file_folder_path, self._name(file.name))
+      
       # Write f3d/f3z file
       options = export_manager.createFusionArchiveExportOptions(file_export_path)
       export_manager.execute(options)
