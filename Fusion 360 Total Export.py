@@ -309,8 +309,11 @@ class TotalExport(object):
   def _name(self, name):
     name = re.sub('[^a-zA-Z0-9а-яА-ЯЁё_ \n\.,-]', '_', name).strip()
 
-    if name.endswith('.stp') or name.endswith('.stl') or name.endswith('.igs'):
+    if name.lower().endswith('.stp') or name.lower().endswith('.stl') or name.lower().endswith('.igs'):
       name = name[0: -4] + "_" + name[-3:]
+
+    if name.lower().endswith('.step'):
+      name = name[0: -5] + "_" + name[-4:]
 
     return name
 
