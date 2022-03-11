@@ -77,41 +77,50 @@ class TotalExport(object):
       hub = all_hubs.item(hub_index)
 
       self.log.info("Exporting hub \"{}\"".format(hub.name))
+      self.data.activeHub = hub
+      time.sleep(1) 
+      self.log.info("activeHub hub \"{}\"".format(self.data.activeHub.name))
 
-      all_projects = hub.dataProjects
-      for project_index in range(all_projects.count):
-        files = []
-        project = all_projects.item(project_index)
-        self.log.info("Exporting project \"{}\"".format(project.name))
+      if hub.id == self.data.activeHub.id:
 
-        folder = project.rootFolder
+        all_projects = hub.dataProjects
+        for project_index in range(all_projects.count):
+          files = []
+          project = all_projects.item(project_index)
+          self.log.info("Exporting project \"{}\"".format(project.name))
+          self.data.activeProject = project
+          time.sleep(1) 
 
-        files.extend(self._get_files_for(folder))
+          self.log.info("activeProject \"{}\"".format(project.name))
 
-        progress_dialog.message = "Hub: {} of {}\nProject: {} of {}\nExporting design %v of %m".format(
-          hub_index + 1,
-          all_hubs.count,
-          project_index + 1,
-          all_projects.count
-        )
-        progress_dialog.maximumValue = len(files)
-        progress_dialog.reset()
+          folder = project.rootFolder
 
-        if not files:
-          self.log.info("No files to export for this project")
-          continue
+          files.extend(self._get_files_for(folder))
 
-        for file_index in range(len(files)):
-          if progress_dialog.wasCancelled:
-            self.log.info("The process was cancelled!")
-            self.was_cancelled = True
-            return
+          progress_dialog.message = "Hub: {} of {}\nProject: {} of {}\nExporting design %v of %m".format(
+            hub_index + 1,
+            all_hubs.count,
+            project_index + 1,
+            all_projects.count
+          )
+          progress_dialog.maximumValue = len(files)
+          progress_dialog.reset()
 
-          file: adsk.core.DataFile = files[file_index]
-          progress_dialog.progressValue = file_index + 1
-          self._write_data_file(output_path, file)
-        self.log.info("Finished exporting project \"{}\"".format(project.name))
-      self.log.info("Finished exporting hub \"{}\"".format(hub.name))
+          if not files:
+            self.log.info("No files to export for this project")
+            continue
+
+          for file_index in range(len(files)):
+            if progress_dialog.wasCancelled:
+              self.log.info("The process was cancelled!")
+              self.was_cancelled = True
+              return
+
+            file: adsk.core.DataFile = files[file_index]
+            progress_dialog.progressValue = file_index + 1
+            self._write_data_file(output_path, file)
+          self.log.info("Finished exporting project \"{}\"".format(project.name))
+        self.log.info("Finished exporting hub \"{}\"".format(hub.name))
 
   def _ask_for_output_path(self):
     folder_dialog = self.ui.createFolderDialog()
