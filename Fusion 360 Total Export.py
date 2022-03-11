@@ -66,6 +66,9 @@ class TotalExport(object):
       self.ui.messageBox("Export finished completely successfully!")
 
   def _export_data(self, output_path):
+    if len(self.data.dataHubs) > 1:
+      self.ui.messageBox("The API doesn't support activating a hub and you can only work with the contents of a hub in Fusion when that hub is active. \n\nScript will work only in active hub. \n\nhttps://forums.autodesk.com/t5/fusion-360-api-and-scripts/how-to-select-teams-hub-from-python-api/m-p/10748918")
+
     progress_dialog = self.ui.createProgressDialog()
     progress_dialog.show("Exporting data!", "", 0, 1, 1)
 
