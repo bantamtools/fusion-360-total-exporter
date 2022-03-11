@@ -219,7 +219,7 @@ class TotalExport(object):
     except BaseException as ex:
       self.num_issues += 1
       self.log.exception("Failed while working on \"{}\"".format(file.name), exc_info=ex)
-      raise
+
     finally:
       try:
         if document is not None:
