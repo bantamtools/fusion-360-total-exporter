@@ -181,6 +181,7 @@ class TotalExport(object):
       self.log.info("f3d file \"{}\" already exists".format(file_export_path))
       return
 
+    document = None
     try:
       document = self.documents.open(file)
 
