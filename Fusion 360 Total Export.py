@@ -67,7 +67,7 @@ class TotalExport(object):
       self.ui.messageBox("Export finished completely successfully!")
 
     if self.has_cloud_export:
-      self.ui.messageBox("Wait for cloud export finish end before closing Fusion360", "Warning!", 0, 3) # OK, Warning
+      self.ui.messageBox("Wait for cloud export finish before closing Fusion360", "Warning!", 0, 3) # OK, Warning
 
   def _export_data(self, output_path):
     if len(self.data.dataHubs) > 1:
