@@ -115,6 +115,9 @@ class TotalExport(object):
             continue
 
           for file_index in range(len(files)):
+            self.app.activeViewport.refresh()
+            adsk.doEvents()  
+
             if progress_dialog.wasCancelled:
               self.log.info("The process was cancelled!")
               self.was_cancelled = True
