@@ -26,6 +26,7 @@ class TotalExport(object):
     self.log = Logger("Fusion 360 Total Export")
     self.num_issues = 0
     self.was_cancelled = False
+    self.has_cloud_export = False
     
   def __enter__(self):
     return self
@@ -64,6 +65,9 @@ class TotalExport(object):
         ))
     else:
       self.ui.messageBox("Export finished completely successfully!")
+
+    if self.has_cloud_export:
+      self.ui.messageBox("Wait for cloud export finish end before closing Fusion360", "Warning!", 0, 3) # OK, Warning
 
   def _export_data(self, output_path):
     if len(self.data.dataHubs) > 1:
@@ -184,12 +188,17 @@ class TotalExport(object):
     file_export_path = os.path.join(file_folder_path, self._name(file.name)) + " v" + str(file.versionNumber)
     file_export_path = file_export_path + ".f3d" #fix for names with dots. Fusion trying to interpretate symbols after last dot as extensoin
 
+    assembly_export_path = os.path.join(file_folder_path, file.name) + ".f3z" # only for check. can't pass into Fusion. Not self._name(file.name) 
 
     if max_output_path_length > 0 and len(file_export_path) > max_output_path_length:
       self.log.info("Path is too long. Skip \"{}\"".format(file_export_path))
       return
 
-    if ignore_already_exported_files and os.path.exists(file_export_path):
+    is_assembly = file.hasChildReferences
+    is_file_export_path_exist = os.path.exists(file_export_path)
+    is_assembly_export_path_exist = os.path.exists(assembly_export_path)
+
+    if ignore_already_exported_files and is_file_export_path_exist and (not is_assembly or is_assembly_export_path_exist):
       self.log.info("f3d file \"{}\" already exists".format(file_export_path))
       return
 
@@ -204,18 +213,26 @@ class TotalExport(object):
 
       self.log.info("Writing to \"{}\" \"{}\"".format(file_folder_path, file_export_path))
 
-      fusion_document: adsk.fusion.FusionDocument = adsk.fusion.FusionDocument.cast(document)
-      design: adsk.fusion.Design = fusion_document.design
-      export_manager: adsk.fusion.ExportManager = design.exportManager
+      if is_assembly and not is_assembly_export_path_exist:
+        self.has_cloud_export = True
+        self.log.info("f3z file. executing cloud export into \"{}\"".format(assembly_export_path))
+        returnValue = self.app.executeTextCommand(u'data.fileExport f3z "' + file_folder_path + '"')
+        self.log.info("cloud export status: \"{}\"".format(returnValue))
+        time.sleep(5)
 
-      
-      # Write f3d/f3z file
-      options = export_manager.createFusionArchiveExportOptions(file_export_path)
-      export_manager.execute(options)
-      
-      self._write_component(file_folder_path, design.rootComponent)
+      if not is_file_export_path_exist:
+        fusion_document: adsk.fusion.FusionDocument = adsk.fusion.FusionDocument.cast(document)
+        design: adsk.fusion.Design = fusion_document.design
+        export_manager: adsk.fusion.ExportManager = design.exportManager
 
-      self.log.info("Finished exporting file \"{}\"".format(file.name))
+        
+        # Write f3d/f3z file
+        options = export_manager.createFusionArchiveExportOptions(file_export_path)
+        export_manager.execute(options)
+        
+        self._write_component(file_folder_path, design.rootComponent)
+
+        self.log.info("Finished exporting file \"{}\"".format(file.name))
     except BaseException as ex:
       self.num_issues += 1
       self.log.exception("Failed while working on \"{}\"".format(file.name), exc_info=ex)
