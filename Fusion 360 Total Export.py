@@ -352,7 +352,7 @@ class TotalExport(object):
     return out_path
   
   def _name(self, name):
-    name = re.sub('[^a-zA-Z0-9а-яА-ЯЁё_ \n\.,-]', '_', name).strip()
+    name = re.sub('[^a-zA-Z0-9а-яА-ЯЁё_ \.,\[\]+-]', '_', name).strip()
 
     if name.lower().endswith('.stp') or name.lower().endswith('.stl') or name.lower().endswith('.igs'):
       name = name[0: -4] + "_" + name[-3:]
