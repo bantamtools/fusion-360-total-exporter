@@ -232,6 +232,12 @@ class TotalExport(object):
 
       self.log.info("Writing to \"{}\" \"{}\"".format(file_folder_path, file_export_path))
 
+      if not os.path.exists(file_export_path + ".png"):
+        self.app.activeViewport.refresh()
+        adsk.doEvents()
+        self.app.activeViewport.saveAsImageFile(file_export_path + '.png', 512, 512)
+
+
       if is_assembly and not is_assembly_export_path_exist:
         self.has_cloud_export = True
         self.log.info("f3z file. executing cloud export into \"{}\"".format(assembly_export_path))
