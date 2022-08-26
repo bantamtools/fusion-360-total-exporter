@@ -223,7 +223,7 @@ class TotalExport(object):
       self.log.info("Path is too long. Skip \"{}\"".format(file_export_path))
       return
 
-    is_assembly = file.hasChildReferences
+    is_assembly = file.hasChildReferences # very slow call ~0.2s
     is_file_export_path_exist = os.path.exists(file_export_path)
     is_assembly_export_path_exist = os.path.exists(assembly_export_path)
     is_zip_acrhive_exist = os.path.exists(zip_acrhive_path + ".zip")
