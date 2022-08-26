@@ -10,6 +10,7 @@ from threading import Thread
 import time
 import os
 import re
+import shutil
 
 export_step = True
 export_stl = False
@@ -27,6 +28,7 @@ class TotalExport(object):
     self.num_issues = 0
     self.was_cancelled = False
     self.has_cloud_export = False
+    self.temp_foler_name = "_temp"
     self.exportignore = ""
     
   def __enter__(self):
@@ -45,6 +47,10 @@ class TotalExport(object):
     output_path = self._ask_for_output_path()
 
     if output_path is None:
+      return
+
+    if os.path.exists(os.path.join(output_path, self.temp_foler_name)):
+      self.ui.messageBox("Please delete the temp foler {} manually".format(self.temp_foler_name))
       return
 
     if os.path.exists(os.path.join(output_path, 'exportignore.txt')):
@@ -74,6 +80,9 @@ class TotalExport(object):
 
     if self.has_cloud_export:
       self.ui.messageBox("Wait for cloud export finish before closing Fusion360", "Warning!", 0, 3) # OK, Warning
+
+    if os.path.exists(os.path.join(output_path, self.temp_foler_name)):
+      self.ui.messageBox("Please delete the temp foler {} manually".format(self.temp_foler_name))
 
   def _export_data(self, output_path):
     if len(self.data.dataHubs) > 1:
@@ -208,6 +217,7 @@ class TotalExport(object):
     file_export_path = file_export_path + ".f3d" #fix for names with dots. Fusion trying to interpretate symbols after last dot as extensoin
 
     assembly_export_path = os.path.join(file_folder_path, file.name) + ".f3z" # only for check. can't pass into Fusion. Not self._name(file.name) 
+    zip_acrhive_path = file_export_path + "_files"
 
     if max_output_path_length > 0 and len(file_export_path) > max_output_path_length:
       self.log.info("Path is too long. Skip \"{}\"".format(file_export_path))
@@ -216,9 +226,10 @@ class TotalExport(object):
     is_assembly = file.hasChildReferences
     is_file_export_path_exist = os.path.exists(file_export_path)
     is_assembly_export_path_exist = os.path.exists(assembly_export_path)
+    is_zip_acrhive_exist = os.path.exists(zip_acrhive_path + ".zip")
 
-    if ignore_already_exported_files and is_file_export_path_exist and (not is_assembly or is_assembly_export_path_exist):
-      self.log.info("f3d file \"{}\" already exists".format(file_export_path))
+    if ignore_already_exported_files and is_file_export_path_exist and (not is_assembly or is_assembly_export_path_exist) and is_zip_acrhive_exist:
+      self.log.info("All data files \"{}\" already exists".format(file_export_path))
       return
 
     document = None
@@ -254,10 +265,31 @@ class TotalExport(object):
         # Write f3d/f3z file
         options = export_manager.createFusionArchiveExportOptions(file_export_path)
         export_manager.execute(options)
-        
-        self._write_component(file_folder_path, design.rootComponent)
 
-        self.log.info("Finished exporting file \"{}\"".format(file.name))
+        # self._write_component(file_folder_path, design.rootComponent)
+      
+      if not os.path.exists(zip_acrhive_path) or os.path.getsize(zip_acrhive_path) < 50:
+        fusion_document: adsk.fusion.FusionDocument = adsk.fusion.FusionDocument.cast(document)
+        design: adsk.fusion.Design = fusion_document.design
+        export_manager: adsk.fusion.ExportManager = design.exportManager
+
+        temp_rootComponent_folder_path = self._take(
+          root_folder,
+          self.temp_foler_name,
+          self._name(file.versionId)
+          )
+
+        if len(os.listdir(temp_rootComponent_folder_path)) > 0:
+          self.log.info("Using cache files for archive \"{}\" -> \"{}\"".format(file.id, file.name))
+        else:
+          self.log.info("Exporting files for archive \"{}\" -> \"{}\"".format(file.id, file.name))
+          self._write_component(temp_rootComponent_folder_path, design.rootComponent)            
+
+        shutil.make_archive(zip_acrhive_path, 'zip', temp_rootComponent_folder_path)
+        self.log.info("Archived \"{}\" -> \"{}\"".format(file.id, file.name))
+
+      self.log.info("Finished exporting file \"{}\"".format(file.name))
+
     except BaseException as ex:
       self.num_issues += 1
       self.log.exception("Failed while working on \"{}\"".format(file.name), exc_info=ex)
