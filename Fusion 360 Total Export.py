@@ -304,7 +304,7 @@ class TotalExport(object):
 
 
   def _write_component(self, component_base_path, component: adsk.fusion.Component):
-    design = component.parentDesign
+    # design = component.parentDesign
     
     output_path = os.path.join(component_base_path, self._name(component.name))
     if max_output_path_length > 0 and len(output_path) > max_output_path_length:
