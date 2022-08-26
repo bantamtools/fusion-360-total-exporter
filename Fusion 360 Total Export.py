@@ -27,6 +27,7 @@ class TotalExport(object):
     self.num_issues = 0
     self.was_cancelled = False
     self.has_cloud_export = False
+    self.exportignore = ""
     
   def __enter__(self):
     return self
@@ -45,6 +46,11 @@ class TotalExport(object):
 
     if output_path is None:
       return
+
+    if os.path.exists(os.path.join(output_path, 'exportignore.txt')):
+      f=open(os.path.join(output_path, 'exportignore.txt'))
+      self.exportignore=f.read()
+      f.close()
 
     file_handler = FileHandler(os.path.join(output_path, 'output.log'), 'a', 'utf-8')
     file_handler.setFormatter(Formatter(u'%(asctime)s - %(levelname)s - %(message)s'))
@@ -177,6 +183,10 @@ class TotalExport(object):
         self._name(file.name) + "." + file.fileExtension
         )
 
+      if self.is_ignoring_file(file_folder_path):
+        self.log.info("File \"{}\" found in exportignore.txt".format(file_folder_path))
+        return
+
       if not os.path.exists(file_folder_path):
         self.num_issues += 1
         self.log.exception("Couldn't make root folder\"{}\"".format(file_folder_path))
@@ -286,6 +296,11 @@ class TotalExport(object):
 
   def _write_step(self, output_path, component: adsk.fusion.Component):
     file_path = output_path + ".stp"
+
+    if self.is_ignoring_file(file_path):
+      self.log.info("File \"{}\" found in exportignore.txt".format(file_path))
+      return
+
     if os.path.exists(file_path):
       self.log.info("Step file \"{}\" already exists".format(file_path))
       return
@@ -298,6 +313,11 @@ class TotalExport(object):
 
   def _write_stl(self, output_path, component: adsk.fusion.Component):
     file_path = output_path + ".stl"
+
+    if self.is_ignoring_file(file_path):
+      self.log.info("File \"{}\" found in exportignore.txt".format(file_path))
+      return
+
     if os.path.exists(file_path):
       self.log.info("Stl file \"{}\" already exists".format(file_path))
       return
@@ -329,6 +349,11 @@ class TotalExport(object):
         
   def _write_stl_body(self, output_path, body):
     file_path = output_path + ".stl"
+
+    if self.is_ignoring_file(file_path):
+      self.log.info("File \"{}\" found in exportignore.txt".format(file_path))
+      return
+
     if os.path.exists(file_path):
       self.log.info("Stl body file \"{}\" already exists".format(file_path))
       return
@@ -345,6 +370,11 @@ class TotalExport(object):
 
   def _write_iges(self, output_path, component: adsk.fusion.Component):
     file_path = output_path + ".igs"
+
+    if self.is_ignoring_file(file_path):
+      self.log.info("File \"{}\" found in exportignore.txt".format(file_path))
+      return
+
     if os.path.exists(file_path):
       self.log.info("Iges file \"{}\" already exists".format(file_path))
       return
@@ -358,6 +388,11 @@ class TotalExport(object):
 
   def _write_dxf(self, output_path, sketch: adsk.fusion.Sketch):
     file_path = output_path + ".dxf"
+
+    if self.is_ignoring_file(file_path):
+      self.log.info("File \"{}\" found in exportignore.txt".format(file_path))
+      return
+
     if os.path.exists(file_path):
       self.log.info("DXF sketch file \"{}\" already exists".format(file_path))
       return
@@ -382,6 +417,12 @@ class TotalExport(object):
 
     return name
 
+  def is_ignoring_file(self, file_path):
+    for line in self.exportignore.splitlines():
+      if line.strip() and line.strip() in file_path:
+        return True
+    
+    return False
     
 
 def run(context):
