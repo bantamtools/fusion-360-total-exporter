@@ -161,16 +161,20 @@ class TotalExport(object):
       self.log.info("Not exporting file \"{}\"".format(file.name))
       return
 
-    self.log.info("Exporting file \"{}\"".format(file.name))
+    # self.log.info("Exporting file \"{}\"".format(file.name))
 
 
     try:
-      file_folder = file.parentFolder
-      file_folder_path = self._name(file_folder.name)
+      file_folder = file
+      file_folder_path = ""
 
-      while file_folder.parentFolder is not None:
+      while True:
         file_folder = file_folder.parentFolder
+        if not file_folder.isRoot:
         file_folder_path = os.path.join(self._name(file_folder.name), file_folder_path)
+
+        if file_folder.parentFolder is None:
+          break
 
       parent_project = file_folder.parentProject
       parent_hub = parent_project.parentHub
@@ -178,10 +182,12 @@ class TotalExport(object):
       file_folder_path = self._take(
         root_folder,
         "Hub {}".format(self._name(parent_hub.name)),
-        "Project {}".format(self._name(parent_project.name)),
+        "{}".format(self._name(parent_project.name)),
         file_folder_path,
         self._name(file.name) + "." + file.fileExtension
         )
+
+      self.log.info("Exporting file \"{}\" to \"{}\"".format(file.name, file_folder_path))
 
       if self.is_ignoring_file(file_folder_path):
         self.log.info("File \"{}\" found in exportignore.txt".format(file_folder_path))
