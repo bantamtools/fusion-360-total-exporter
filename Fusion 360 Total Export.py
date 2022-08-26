@@ -58,6 +58,7 @@ class TotalExport(object):
       self.exportignore=f.read()
       f.close()
 
+
     file_handler = FileHandler(os.path.join(output_path, 'output.log'), 'a', 'utf-8')
     file_handler.setFormatter(Formatter(u'%(asctime)s - %(levelname)s - %(message)s'))
     self.log.addHandler(file_handler)
@@ -131,7 +132,7 @@ class TotalExport(object):
 
           for file_index in range(len(files)):
             self.app.activeViewport.refresh()
-            adsk.doEvents()  
+            adsk.doEvents()
 
             if progress_dialog.wasCancelled:
               self.log.info("The process was cancelled!")
@@ -180,7 +181,7 @@ class TotalExport(object):
       while True:
         file_folder = file_folder.parentFolder
         if not file_folder.isRoot:
-        file_folder_path = os.path.join(self._name(file_folder.name), file_folder_path)
+          file_folder_path = os.path.join(self._name(file_folder.name), file_folder_path)
 
         if file_folder.parentFolder is None:
           break
@@ -207,12 +208,11 @@ class TotalExport(object):
         self.log.exception("Couldn't make root folder\"{}\"".format(file_folder_path))
         return
 
-
     except BaseException as ex:
       self.num_issues += 1
       self.log.exception("Failed while working on \"{}\"".format(file.name), exc_info=ex)
       raise
-
+  
     file_export_path = os.path.join(file_folder_path, self._name(file.name)) + " v" + str(file.versionNumber)
     file_export_path = file_export_path + ".f3d" #fix for names with dots. Fusion trying to interpretate symbols after last dot as extensoin
 
