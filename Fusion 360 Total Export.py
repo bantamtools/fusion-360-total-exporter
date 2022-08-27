@@ -248,6 +248,7 @@ class TotalExport(object):
         self.app.activeViewport.refresh()
         adsk.doEvents()
         self.app.activeViewport.saveAsImageFile(file_export_path + '.png', 512, 512)
+        self.check_exported_file(file_export_path + '.png')
 
 
       if is_assembly and not is_assembly_export_path_exist:
@@ -266,6 +267,7 @@ class TotalExport(object):
         # Write f3d/f3z file
         options = export_manager.createFusionArchiveExportOptions(file_export_path)
         export_manager.execute(options)
+        self.check_exported_file(file_export_path)
 
         # self._write_component(file_folder_path, design.rootComponent)
       
@@ -287,7 +289,7 @@ class TotalExport(object):
           self._write_component(temp_rootComponent_folder_path, design.rootComponent)            
 
         shutil.make_archive(zip_acrhive_path, 'zip', temp_rootComponent_folder_path)
-        self.log.info("Archived \"{}\" -> \"{}\"".format(file.id, file.name))
+        self.check_exported_file(zip_acrhive_path + '.zip')
 
       self.log.info("Finished exporting file \"{}\"".format(file.name))
 
@@ -357,6 +359,8 @@ class TotalExport(object):
     options = export_manager.createSTEPExportOptions(output_path, component)
     export_manager.execute(options)
 
+    self.check_exported_file(file_path)
+
   def _write_stl(self, output_path, component: adsk.fusion.Component):
     file_path = output_path + ".stl"
 
@@ -379,6 +383,8 @@ class TotalExport(object):
 
       if component.occurrences.count + component.bRepBodies.count + component.meshBodies.count > 0:
         self.num_issues += 1
+
+    self.check_exported_file(file_path)
 
     bRepBodies = component.bRepBodies
     meshBodies = component.meshBodies
@@ -414,6 +420,8 @@ class TotalExport(object):
       # Probably an empty model, ignore it
       pass
 
+    self.check_exported_file(file_path)
+
   def _write_iges(self, output_path, component: adsk.fusion.Component):
     file_path = output_path + ".igs"
 
@@ -431,6 +439,7 @@ class TotalExport(object):
 
     options = export_manager.createIGESExportOptions(file_path, component)
     export_manager.execute(options)
+    self.check_exported_file(file_path)
 
   def _write_dxf(self, output_path, sketch: adsk.fusion.Sketch):
     file_path = output_path + ".dxf"
@@ -446,6 +455,8 @@ class TotalExport(object):
     self.log.info("Writing dxf sketch file \"{}\"".format(file_path))
 
     sketch.saveAsDXF(file_path)
+      
+    self.check_exported_file(file_path)
 
   def _take(self, *path):
     out_path = os.path.join(*path)
@@ -469,6 +480,15 @@ class TotalExport(object):
         return True
     
     return False
+
+  def check_exported_file(self, file_path):
+    if not os.path.exists(file_path):
+      self.log.error("Exported file \"{}\" not found".format(file_path))
+      self.num_issues += 1
+      return False
+
+    return True
+
     
 
 def run(context):
