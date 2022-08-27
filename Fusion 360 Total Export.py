@@ -282,11 +282,11 @@ class TotalExport(object):
           self._name(file.versionId)
           )
 
-        if len(os.listdir(temp_rootComponent_folder_path)) > 0:
-          self.log.info("Using cache files for archive \"{}\" -> \"{}\"".format(file.id, file.name))
-        else:
-          self.log.info("Exporting files for archive \"{}\" -> \"{}\"".format(file.id, file.name))
-          self._write_component(temp_rootComponent_folder_path, design.rootComponent)            
+        # if len(os.listdir(temp_rootComponent_folder_path)) > 0:
+        #   self.log.info("Using cache files for archive \"{}\" -> \"{}\"".format(file.id, file.name))
+        # else:
+        self.log.info("Exporting files for archive \"{}\" -> \"{}\"".format(file.id, file.name))
+        self._write_component(temp_rootComponent_folder_path, design.rootComponent)            
 
         shutil.make_archive(zip_acrhive_path, 'zip', temp_rootComponent_folder_path)
         self.check_exported_file(zip_acrhive_path + '.zip')
