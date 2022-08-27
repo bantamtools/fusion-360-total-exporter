@@ -314,10 +314,10 @@ class TotalExport(object):
       self.num_issues += 1
       self.log.error("Path is too long. Skip \"{}\"".format(output_path))
       return
-    
+
+    output_path = self._take(output_path)
+
     self.log.info("Writing component \"{}\" to \"{}\"".format(component.name, output_path))
-
-
 
     try:
       if export_step:
