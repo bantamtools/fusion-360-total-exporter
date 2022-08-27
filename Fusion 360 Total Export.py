@@ -416,8 +416,10 @@ class TotalExport(object):
     try:
       options = export_manager.createSTLExportOptions(body, file_path)
       export_manager.execute(options)
-    except BaseException:
+    except BaseException as ex:
       # Probably an empty model, ignore it
+      self.num_issues += 1      
+      self.log.exception("Probably an empty model \"{}\"".format(file_path), exc_info=ex)
       pass
 
     self.check_exported_file(file_path)
