@@ -460,6 +460,11 @@ class TotalExport(object):
 
   def _take(self, *path):
     out_path = os.path.join(*path)
+
+    if max_output_path_length > 0 and len(out_path) > max_output_path_length:
+      self.num_issues += 1
+      self.log.error("Path is too long \"{}\"".format(out_path))
+
     os.makedirs(out_path, exist_ok=True)
     return out_path
   
