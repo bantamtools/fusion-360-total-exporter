@@ -50,8 +50,9 @@ class TotalExport(object):
       return
 
     if os.path.exists(os.path.join(output_path, self.temp_foler_name)):
-      self.ui.messageBox("Please delete the temp foler {} manually".format(self.temp_foler_name))
-      return
+        dialogResult = self.ui.messageBox("Temp folder {} could contain not actual data. Do you really want to continue?".format(self.temp_foler_name), 'Fusion 360 total exporter', adsk.core.MessageBoxButtonTypes.YesNoButtonType, adsk.core.MessageBoxIconTypes.InformationIconType)
+        if dialogResult == adsk.core.DialogResults.DialogNo:
+            return
 
     if os.path.exists(os.path.join(output_path, 'exportignore.txt')):
       f=open(os.path.join(output_path, 'exportignore.txt'))
