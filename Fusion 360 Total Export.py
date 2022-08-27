@@ -454,7 +454,8 @@ class TotalExport(object):
 
     self.log.info("Writing dxf sketch file \"{}\"".format(file_path))
 
-    sketch.saveAsDXF(file_path)
+    if not sketch.saveAsDXF(file_path):
+      self.log.error("Could not saveAsDXF \"{}\"".format(sketch.errorOrWarningMessage))
       
     self.check_exported_file(file_path)
 
